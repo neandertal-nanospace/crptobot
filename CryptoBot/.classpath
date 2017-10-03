@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="lib" path="lib/external/ajt-2.9.jar"/>
+	<classpathentry kind="lib" path="lib/external/android-1.5_r4.jar"/>
+	<classpathentry kind="lib" path="lib/external/javaml-0.1.7.jar"/>
+	<classpathentry kind="lib" path="lib/external/logback-classic-1.0.13.jar"/>
+	<classpathentry kind="lib" path="lib/external/logback-core-1.1.2.jar"/>
+	<classpathentry kind="lib" path="lib/external/slf4j-api-1.7.5.jar"/>
+	<classpathentry kind="lib" path="lib/external/slf4j-nop-1.7.6.jar"/>
+	<classpathentry kind="lib" path="lib/external/weka.jar"/>
+	<classpathentry kind="lib" path="lib/neuroph-adapters-2.94.jar" sourcepath="lib/sources/neuroph-adapters-2.94-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/CoinBot/lib/javadoc/neuroph-adapters-2.94-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="lib/neuroph-contrib-2.94.jar" sourcepath="lib/sources/neuroph-contrib-2.94-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/CoinBot/lib/javadoc/neuroph-contrib-2.94-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="lib/neuroph-core-2.94.jar" sourcepath="lib/sources/neuroph-core-2.94-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/CoinBot/lib/javadoc/neuroph-core-2.94-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="lib/neuroph-imgrec-2.94.jar" sourcepath="lib/sources/neuroph-imgrec-2.94-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/CoinBot/lib/javadoc/neuroph-imgrec-2.94-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="lib/neuroph-ocr-2.94.jar" sourcepath="lib/sources/neuroph-ocr-2.94-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/CoinBot/lib/javadoc/neuroph-ocr-2.94-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="lib/neuroph-samples-2.94.jar" sourcepath="lib/sources/neuroph-samples-2.94-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/CoinBot/lib/javadoc/neuroph-samples-2.94-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
