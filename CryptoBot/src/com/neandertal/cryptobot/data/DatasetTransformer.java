@@ -1,4 +1,4 @@
-package com.neandertal.cryptobot.dataset;
+package com.neandertal.cryptobot.data;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -31,14 +31,14 @@ public class DatasetTransformer
         numberFormat.setGroupingUsed(false);
     }
     
-    private static final String INFO_LINE_START = "#";
-    private static final String INFO_LABEL_DELIM = ":";
+/*    private static final String INFO_LINE_START = "#";
+    private static final String INFO_LABEL_DELIM = ":";*/
     private static final String COLUMN_DATE = "Date";
 
-    private static enum META
+    /*private static enum META
     {
         SOURCE, EXCHANGE, FROM_CURRENCY, TO_CURRENCY, START, END, RECORDS;
-    }
+    }*/
 
     public static enum TIME_COLUMNS
     {
@@ -187,7 +187,7 @@ public class DatasetTransformer
                     return;
                 }
                 
-                if (s.startsWith(INFO_LINE_START))
+                /*if (s.startsWith(INFO_LINE_START))
                 {
                     s = s.substring(INFO_LINE_START.length());
                     String[] split = s.split(INFO_LABEL_DELIM);
@@ -205,7 +205,7 @@ public class DatasetTransformer
                         dc.meta.put(meta, value);
                     }
                     return;
-                }
+                }*/
                 
                 String[] split = s.split(String.valueOf(dc.separator) + "+");
                 DataRow row = new DataRow();
@@ -311,14 +311,14 @@ public class DatasetTransformer
 
         try (BufferedWriter writer = Files.newBufferedWriter(path))
         {
-            writer.write(dc.getInfoLine(META.SOURCE));
+            /*writer.write(dc.getInfoLine(META.SOURCE));
             writer.write(dc.getInfoLine(META.EXCHANGE));
             writer.write(dc.getInfoLine(META.FROM_CURRENCY));
             writer.write(dc.getInfoLine(META.TO_CURRENCY));
             writer.write(dc.getInfoLine(META.START));
             writer.write(dc.getInfoLine(META.END));
             writer.write(dc.getInfoLine(META.RECORDS));
-            writer.newLine();
+            writer.newLine();*/
             writer.write(dc.getHeadersLine());
             writer.write(dc.getValuesAsLines());
             
@@ -432,7 +432,7 @@ public class DatasetTransformer
         }
     }
 
-    private static class DataCollection
+    /*private static class DataCollection
     {
         public String source = null;
         public char separator = ',';
@@ -530,9 +530,9 @@ public class DatasetTransformer
             }
             return sb.toString();
         }
-    }
+    }*/
     
-    private static class DataRow implements Comparable<DataRow>
+    /*private static class DataRow implements Comparable<DataRow>
     {
         public List<String> values = new ArrayList<>();
 
@@ -551,7 +551,7 @@ public class DatasetTransformer
             }
             return 0;
         }
-    }
+    }*/
     
     private static class TrainingSet
     {

@@ -39,5 +39,6 @@
 			<attribute name="javadoc_location" value="jar:platform:/resource/CoinBot/lib/javadoc/neuroph-samples-2.94-javadoc.jar!/"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
