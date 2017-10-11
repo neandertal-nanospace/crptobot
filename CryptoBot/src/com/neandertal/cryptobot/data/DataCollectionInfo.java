@@ -7,7 +7,7 @@ import java.util.stream.Stream;
 
 public class DataCollectionInfo
 {
-    private static final String INFO_LINE_START = "#";
+    public static final String INFO_LINE_START = "#";
     private static final String INFO_LABEL_DELIM = ":";
     
     public static enum ENTRY
@@ -27,18 +27,18 @@ public class DataCollectionInfo
         info.put(entry, val);
     }
     
-    private void checkAll() throws DCException
+    private void checkAll()
     {
         for (ENTRY entry: ENTRY.values())
         {
             if (!info.containsKey(entry))
             {
-                throw new DCException("Missing entry: " + entry.name());
+                throw new IllegalArgumentException("Missing entry: " + entry.name());
             }
         }
     }
     
-    public void fillFrom(Stream<String> stream) throws DCException
+    public void fillFrom(Stream<String> stream)
     {
         stream.filter(line -> line.startsWith(INFO_LINE_START))
               .collect(Collectors.toList())
@@ -47,7 +47,7 @@ public class DataCollectionInfo
                   int ind = s.indexOf(INFO_LABEL_DELIM);
                   if (ind < 0)
                   {
-                      new DCException("Wrong info line: " + s);
+                      throw new IllegalArgumentException("Wrong info line: " + s);
                   }
                   
                   String label = s.substring(0, ind).trim();
@@ -61,7 +61,7 @@ public class DataCollectionInfo
                   }
                   catch (Exception e)
                   {
-                      new DCException("Unknown info label found in file: " + label, e);
+                      throw new IllegalArgumentException("Unknown info label found in file: " + label, e);
                   }
               });
         

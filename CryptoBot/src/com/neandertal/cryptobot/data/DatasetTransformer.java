@@ -22,25 +22,27 @@ import java.util.TimeZone;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
+import com.neandertal.cryptobot.data.DataCollectionInfo.ENTRY;
+
 public class DatasetTransformer
 {
-    private static final SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+/*    private static final SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
     private static final SimpleDateFormat df2 = new SimpleDateFormat("MMM dd, yyyy", Locale.ENGLISH);//Sep 12, 2017
     private static final NumberFormat numberFormat = NumberFormat.getInstance(Locale.ENGLISH);
     static {
         numberFormat.setGroupingUsed(false);
-    }
+    }*/
     
 /*    private static final String INFO_LINE_START = "#";
     private static final String INFO_LABEL_DELIM = ":";*/
-    private static final String COLUMN_DATE = "Date";
+    
 
     /*private static enum META
     {
         SOURCE, EXCHANGE, FROM_CURRENCY, TO_CURRENCY, START, END, RECORDS;
     }*/
 
-    public static enum TIME_COLUMNS
+/*    public static enum TIME_COLUMNS
     {
         YEAR, MONTH, DAY, WEEKDAY;
         
@@ -52,7 +54,7 @@ public class DatasetTransformer
             }
             return false;
         }
-    }
+    }*/
 
     private static final String PATH_RAW_DATA = "D:\\Workspace\\BTCbot\\raw_data";
     private static final String PATH_DC_DATA = "D:\\Workspace\\BTCbot\\dc_data";
@@ -62,8 +64,8 @@ public class DatasetTransformer
 
     public static void main(String[] args)
     {
-        readRawFiles(PATH_RAW_DATA);
-        List<DataCollection> dcList = readDcFiles(PATH_DC_DATA);
+        List<DataCollection> dcList = readFiles(PATH_RAW_DATA);
+        saveFiles(PATH_DC_DATA, dcList);
         
         String source = "";
         String exchange = "";
@@ -72,63 +74,27 @@ public class DatasetTransformer
         
         for (DataCollection dc: dcList)
         {
-           if (from.equals(dc.meta.get(META.FROM_CURRENCY)) && 
-               to.equals(dc.meta.get(META.TO_CURRENCY))) 
+           if (from.equals(dc.getInfo().get(ENTRY.FROM_CURRENCY)) && 
+               to.equals(dc.getInfo().get(ENTRY.TO_CURRENCY))) 
            {
                try
                {
-                   TrainingSet ts = generateTrainingSet(dc, new TIME_COLUMNS[]{}, new String[]{"Low"}, 4, new String[]{"Low"}, 1);
-                   saveTrainingSet(ts);
+                  TrainingSet ts = generateTrainingSet(dc, new TIME_COLUMNS[]{}, new String[]{"Low"}, 4, new String[]{"Low"}, 1);
+                  saveTrainingSet(ts);
                }
                catch (Exception e)
                {
-                   logger.warning("Failed to create input file from :" + dc.source);
+                   logger.warning("Failed to create input file from :" + dc.getSourceFile());
                    e.printStackTrace();
                }
            }
         }
     }
 
-    private static List<DataCollection> readDcFiles(String dcPath)
+    private static List<DataCollection> readFiles(String dirPath)
     {
         List<DataCollection> dcList = new ArrayList<>();
-        
-        try (Stream<Path> paths = Files.walk(Paths.get(dcPath)))
-        {
-            paths.filter(Files::isRegularFile).forEach((path) -> {
-                if (!path.getFileName().toString().endsWith(".dc"))
-                {
-                    return;
-                }
-                
-                DataCollection dc = readRawFile(path);
-                
-                if (dc.rows.isEmpty())
-                {
-                    logger.warning("File is empty: " + dc.source);
-                }
-                else if (dc.headers.size() < 2)
-                {
-                    logger.warning("File is only one column: " + dc.source);
-                }
-                else
-                {
-                    dcList.add(dc);
-                }
-            });
-        }
-        catch (IOException e)
-        {
-            logger.warning("Failed to read raw files in folder:" + dcPath);
-            e.printStackTrace();
-        }
-        
-        return dcList;
-    }
-    
-    private static void readRawFiles(String rawPath)
-    {
-        try (Stream<Path> paths = Files.walk(Paths.get(rawPath)))
+        try (Stream<Path> paths = Files.walk(Paths.get(dirPath)))
         {
             paths.filter(Files::isRegularFile).forEach((path) -> {
                 if (!path.getFileName().toString().endsWith(".txt"))
@@ -136,200 +102,45 @@ public class DatasetTransformer
                     return;
                 }
                 
-                DataCollection dc = readRawFile(path);
-                if (dc != null && dc.prepareForSave())
+                try
                 {
-                    saveRawFile(dc);
+                    DataCollection dc = DataCollection.readFromFile(path);
+                    dcList.add(dc);
+                }
+                catch (Exception e)
+                {
+                    logger.warning("Failed to read file:" + path);
+                    e.printStackTrace();
                 }
             });
         }
         catch (IOException e)
         {
-            logger.warning("Failed to read raw files in folder:" + rawPath);
+            logger.warning("Failed to read files in folder:" + dirPath);
             e.printStackTrace();
         }
+        
+        return dcList;
     }
 
-    private static DataCollection readRawFile(Path path)
+    private static void saveFiles(String dirPath, List<DataCollection> dcList)
     {
-        DataCollection dc = new DataCollection();
-        dc.source = path.toString();
-        
-        Date[] seDates = new Date[2];
-        
-        // read file into stream, try-with-resources
-        try (Stream<String> stream = Files.lines(path))
+        for (DataCollection dc: dcList)
         {
-            stream.forEach((s) -> {
-                s = s.trim();
-                if (s.isEmpty()) return;
-
-                if (s.startsWith(COLUMN_DATE))
-                {
-                    if (s.contains(","))
-                    {
-                        dc.separator = ',';
-                    }
-                    else
-                    {
-                        dc.separator = '\t';
-                    }
-                    
-                    String[] split = s.split(String.valueOf(dc.separator) + "+");
-                    for (int i = 0; i < split.length; i++)
-                    {
-                        String col = (i == 0) ? COLUMN_DATE: split[i];
-                        col = col.trim();
-                        if (col.isEmpty()) continue;
-                        dc.headers.add(col);
-                        dc.maxColumnLength = Math.max(dc.maxColumnLength, col.length());
-                    }
-                    return;
-                }
-                
-                /*if (s.startsWith(INFO_LINE_START))
-                {
-                    s = s.substring(INFO_LINE_START.length());
-                    String[] split = s.split(INFO_LABEL_DELIM);
-                    String label = split[0].trim();
-                    String value = (split.length > 1) ? split[1].trim(): "";
-
-                    META meta = null;
-                    try
-                    {
-                        meta = META.valueOf(label.toUpperCase());
-                    }
-                    catch (Exception e){}
-                    if (meta != null)
-                    {
-                        dc.meta.put(meta, value);
-                    }
-                    return;
-                }*/
-                
-                String[] split = s.split(String.valueOf(dc.separator) + "+");
-                DataRow row = new DataRow();
-                for (int i = 0; i < split.length; i++)
-                {
-                    String v = split[i].trim();
-                    if (i == 0)//date column
-                    {
-                        Date date = null;
-                        try
-                        {
-                            date = dateFormatter.parse(v);
-                        }
-                        catch (ParseException e)
-                        {
-                            try
-                            {
-                                date = df2.parse(v);
-                            }
-                            catch (ParseException e2) 
-                            {
-                                logger.warning("Failed to parse date: " + v + " in file: " + dc.source);
-                                return;
-                            }
-                        }
-                        
-                        if (seDates[0] == null || seDates[0].after(date))
-                        {
-                            seDates[0] = date;
-                        }
-                        if (seDates[1] == null || seDates[1].before(date))
-                        {
-                            seDates[1] = date;
-                        }
-                        
-                        row.values.add(dateFormatter.format(date));
-                    }
-                    else
-                    {
-                        try
-                        {
-                            NumberFormat format = null;
-                            if ("0.0".equals(v) || "-".equals(v))
-                            {
-                                row.values.add(null);
-                            }
-                            else if (v.contains("."))
-                            {
-                                format = NumberFormat.getInstance(Locale.ENGLISH);
-                                Number number = format.parse(v);
-                                Double d = number.doubleValue();
-                                format.setGroupingUsed(false);
-                                row.values.add(format.format(d));
-                            }
-                            else
-                            {
-                                format = NumberFormat.getIntegerInstance(Locale.ENGLISH);
-                                Number number = format.parse(v);
-                                Long l = number.longValue();
-                                format.setGroupingUsed(false);
-                                row.values.add(format.format(l));
-                            }
-                            
-                        }
-                        catch (ParseException e)
-                        {
-                            logger.warning("Failed to parse number: " + v + " in file: " + dc.source);
-                            return;
-                        }
-                    }
-                    dc.maxColumnLength = Math.max(dc.maxColumnLength, v.length());
-                }
-                dc.rows.add(row);
-            });
+            File file = new File(dc.getSourceFile());
+            String filename = file.getName();
+            if (filename.indexOf(".") > 0)
+            {
+                filename = filename.substring(0, filename.lastIndexOf("."));
+            }
+            Path newPath = Paths.get(dirPath, filename + ".dc");
             
-            Collections.sort(dc.rows);
-            dc.maxColumnLength += 4 - dc.maxColumnLength%4;
-            
-            dc.meta.put(META.START, dateFormatter.format(seDates[0]));
-            dc.meta.put(META.END, dateFormatter.format(seDates[1]));
-            dc.meta.put(META.RECORDS, String.valueOf(dc.rows.size()));
-        }
-        catch (Exception e)
-        {
-            logger.warning("Failed to read raw file: " + path.toString());
-            e.printStackTrace();
-            return null;
-        }
-        
-        logger.info("Read file: " + dc.source);
-        return dc;
-    }
-
-    private static void saveRawFile(DataCollection dc)
-    {
-        File file = new File(dc.source);
-        String filename = file.getName();
-        if (filename.indexOf(".") > 0)
-        {
-            filename = filename.substring(0, filename.lastIndexOf("."));
-        }
-        Path path = Paths.get(PATH_DC_DATA, filename + ".dc");
-
-        try (BufferedWriter writer = Files.newBufferedWriter(path))
-        {
-            /*writer.write(dc.getInfoLine(META.SOURCE));
-            writer.write(dc.getInfoLine(META.EXCHANGE));
-            writer.write(dc.getInfoLine(META.FROM_CURRENCY));
-            writer.write(dc.getInfoLine(META.TO_CURRENCY));
-            writer.write(dc.getInfoLine(META.START));
-            writer.write(dc.getInfoLine(META.END));
-            writer.write(dc.getInfoLine(META.RECORDS));
-            writer.newLine();*/
-            writer.write(dc.getHeadersLine());
-            writer.write(dc.getValuesAsLines());
-            
-            logger.info("Wrote file: " + path.toString());
-        }
-        catch (IOException e)
-        {
-            logger.warning("Failed to write file: " + path.toString());
-            e.printStackTrace();
+            DataCollection.saveAsFile(dc, newPath);
         }
     }
+    
+
+    
     
     private static TrainingSet generateTrainingSet(DataCollection dc, TIME_COLUMNS[] timeCols, String[] inColumns, int inSet, String[] outColumns, int outSet) throws Exception
     {
